@@ -50,3 +50,6 @@ alcanzandosuenos-fullstack.zip
 
 # temporales de Word al tener el doc abierto
 ~$*.docx
+
+# carpeta de basura (archivos que no se pudieron borrar por restricciones del entorno remoto)
+_to_delete/
