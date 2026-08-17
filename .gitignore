@@ -1,0 +1,52 @@
+# dependencies
+node_modules/
+**/node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# NestJS / backend build
+backend/dist/
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# OS
+.DS_Store
+Thumbs.db
+*.pem
+
+# env files
+.env
+.env.*
+!.env.example
+
+# typescript
+*.tsbuildinfo
+
+# generated native folders
+/ios
+/android
+
+# archivo fuente ya extraído a alcanzandosuenos/ y backend/ (se mantiene en disco pero no versionado)
+alcanzandosuenos-fullstack.zip
+
+# temporales de Word al tener el doc abierto
+~$*.docx

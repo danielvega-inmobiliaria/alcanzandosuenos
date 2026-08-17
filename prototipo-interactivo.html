@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Alcanzando Sueños — Demo interactivo</title>
+<style>
+  :root{
+    --panel:#120f1a;
+    --panel2:#17131f;
+    --card:#1a1625;
+    --border:#2a2438;
+    --purple:#8b5cf6;
+    --purple2:#a855f7;
+    --purple-deep:#6d28d9;
+    --text:#f3f0fa;
+    --muted:#a29cb5;
+    --green:#34d399;
+    --amber:#fbbf24;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:#050408;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--text);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:36px 20px 60px;
+  }
+  .brandbar{display:flex;align-items:center;gap:14px;margin-bottom:6px;}
+  .logo{width:44px;height:44px;border-radius:13px;background:linear-gradient(135deg,var(--purple2),var(--purple-deep));display:flex;align-items:center;justify-content:center;font-size:20px;}
+  .brandbar h1{margin:0;font-size:21px;background:linear-gradient(90deg,#fff,#c9b7ff);-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .hint{color:var(--muted);font-size:12.5px;margin:2px 0 28px;text-align:center;max-width:360px;}
+
+  .dots{display:flex;gap:6px;margin-bottom:14px;}
+  .dots span{width:7px;height:7px;border-radius:50%;background:#2a2438;transition:background .2s;}
+  .dots span.active{background:linear-gradient(90deg,var(--purple),var(--purple2));width:18px;border-radius:4px;}
+
+  .phone{background:#000;border-radius:40px;padding:11px;box-shadow:0 0 0 1px #232228, 0 40px 80px -20px rgba(0,0,0,.8);}
+  .screen-frame{background:linear-gradient(180deg,#0d0a15,#08070c 60%);border-radius:30px;overflow:hidden;width:300px;height:610px;position:relative;}
+  .scr{position:absolute;inset:0;display:none;flex-direction:column;}
+  .scr.active{display:flex;}
+
+  .statusbar{display:flex;justify-content:space-between;padding:12px 20px 2px;font-size:11px;color:#e9e4f5;font-weight:600;}
+  .topbar{padding:6px 20px 14px;display:flex;align-items:center;gap:10px;}
+  .topbar .back{color:var(--muted);font-size:18px;cursor:pointer;user-select:none;width:20px;}
+  .topbar h3{margin:0;font-size:15px;font-weight:700;}
+  .content{padding:0 20px 16px;flex:1;overflow-y:auto;}
+  .content::-webkit-scrollbar{display:none;}
+  .footer-btn{padding:0 20px 20px;}
+
+  .progress-dots{display:flex;gap:6px;padding:0 20px 12px;}
+  .progress-dots span{height:4px;flex:1;border-radius:2px;background:#2a2438;}
+  .progress-dots span.done{background:linear-gradient(90deg,var(--purple),var(--purple2));}
+
+  .q{font-size:19px;font-weight:700;margin:6px 0 18px;line-height:1.3;}
+  .sub{color:var(--muted);font-size:12.5px;margin:-12px 0 16px;}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .opt{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px 10px;text-align:center;font-size:12.5px;cursor:pointer;transition:.15s;}
+  .opt:hover{border-color:#443a5c;}
+  .opt.sel{border-color:var(--purple2);background:linear-gradient(145deg,rgba(139,92,246,.25),rgba(168,85,247,.08));}
+  .opt .emoji{font-size:26px;display:block;margin-bottom:8px;}
+
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:11.5px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em;}
+  .input{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:13px 14px;font-size:16px;font-weight:600;}
+  .chiprow{display:flex;gap:8px;margin-top:6px;}
+  .chip{flex:1;text-align:center;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:8px 0;font-size:12px;color:var(--muted);cursor:pointer;}
+  .chip.sel{background:linear-gradient(90deg,var(--purple),var(--purple2));color:#fff;border-color:transparent;font-weight:700;}
+
+  .btn{background:linear-gradient(90deg,var(--purple),var(--purple2));color:#fff;text-align:center;padding:14px;border-radius:14px;font-weight:700;font-size:14px;cursor:pointer;user-select:none;}
+  .btn:active{transform:scale(.98);}
+  .btn.secondary{background:var(--panel2);border:1px solid var(--border);color:var(--text);}
+
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:14px;}
+  .card .label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;}
+  .card .big{font-size:22px;font-weight:800;}
+  .card .big.purple{color:#c9b3ff;}
+
+  .result-hero{text-align:center;padding:18px 6px 8px;}
+  .result-hero .check{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--purple2));display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:24px;}
+  .result-hero h4{margin:0 0 4px;font-size:17px;}
+  .result-hero p{margin:0;color:var(--muted);font-size:12.5px;}
+
+  .stat-row{display:flex;gap:10px;margin:16px 0;}
+  .stat{flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:10px;text-align:center;}
+  .stat .n{font-size:16px;font-weight:800;color:#c9b3ff;}
+  .stat .l{font-size:10px;color:var(--muted);margin-top:2px;}
+
+  .disclaimer{background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.35);color:#fde39a;font-size:10.5px;line-height:1.4;border-radius:10px;padding:9px 11px;margin-top:10px;}
+  .disclaimer b{color:#fff2c9;}
+
+  .sim-item{display:flex;justify-content:space-between;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin-bottom:10px;cursor:pointer;}
+  .sim-item .name{font-size:13px;font-weight:700;}
+  .sim-item .desc{font-size:10.5px;color:var(--muted);margin-top:2px;}
+  .sim-item .rate{font-size:14px;font-weight:800;color:var(--green);}
+  .sim-item .radio{width:16px;height:16px;border-radius:50%;border:2px solid var(--border);flex:0 0 auto;margin-left:10px;}
+  .sim-item.sel{border-color:var(--purple2);}
+  .sim-item.sel .radio{border-color:var(--purple2);background:radial-gradient(circle,var(--purple2) 0 40%, transparent 42%);}
+
+  .chart{height:110px;background:var(--panel2);border:1px solid var(--border);border-radius:14px;margin:6px 0 14px;overflow:hidden;}
+  .chart svg{width:100%;height:100%;display:block;}
+
+  .infl-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px dashed var(--border);}
+  .infl-row:last-child{border-bottom:none;}
+  .infl-row .t{font-size:12px;color:var(--muted);}
+  .infl-row .v{font-size:14px;font-weight:700;}
+  .infl-row .v.up{color:var(--amber);}
+
+  .end-hero{text-align:center;padding:60px 20px;}
+  .end-hero .big-check{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--purple2));display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px;}
+
+  .restart{margin-top:26px;color:var(--muted);font-size:12.5px;cursor:pointer;text-decoration:underline;}
+
+  .interviewer-note{
+    margin-top:34px;max-width:420px;background:var(--panel);border:1px solid var(--border);
+    border-radius:14px;padding:16px 18px;color:var(--muted);font-size:12.5px;line-height:1.6;
+  }
+  .interviewer-note b{color:var(--text);}
+</style>
+</head>
+<body>
+
+  <div class="brandbar">
+    <div class="logo">🏔️</div>
+    <h1>Alcanzando Sueños</h1>
+  </div>
+  <div class="hint">Demo interactivo para mostrar en las entrevistas de validación — tocá los botones para avanzar, igual que en la app real.</div>
+
+  <div class="dots" id="dots"></div>
+
+  <div class="phone"><div class="screen-frame">
+
+    <!-- S1: categoría -->
+    <div class="scr active" data-id="s1">
+      <div class="statusbar"><span>9:41</span><span>●●●● ▲ 🔋</span></div>
+      <div class="progress-dots"><span class="done"></span><span></span><span></span><span></span></div>
+      <div class="topbar"><span class="back" onclick="goto_(0)">‹</span><h3>Nueva meta</h3></div>
+      <div class="content">
+        <div class="q">¿Qué querés conseguir?</div>
+        <div class="grid2" id="catgrid">
+          <div class="opt sel" data-cat>🚗<br><span class="emoji" style="display:none"></span>Un auto</div>
+          <div class="opt" data-cat>🏠<br>Una casa</div>
+          <div class="opt" data-cat>✈️<br>Un viaje</div>
+          <div class="opt" data-cat>🎓<br>Estudios</div>
+          <div class="opt" data-cat>💻<br>Computadora</div>
+          <div class="opt" data-cat>💍<br>Algo personal</div>
+        </div>
+      </div>
+      <div class="footer-btn"><div class="btn" onclick="goto_(1)">Continuar</div></div>
+    </div>
+
+    <!-- S2: numeros -->
+    <div class="scr" data-id="s2">
+      <div class="statusbar"><span>9:41</span><span>●●●● ▲ 🔋</span></div>
+      <div class="progress-dots"><span class="done"></span><span class="done"></span><span></span><span></span></div>
+      <div class="topbar"><span class="back" onclick="goto_(0)">‹</span><h3>Nueva meta</h3></div>
+      <div class="content">
+        <div class="q">Contanos los números 🚗</div>
+        <div class="field"><label>¿Cuánto necesitás?</label><div class="input">$ 10.000.000</div></div>
+        <div class="field">
+          <label>¿En cuánto tiempo lo querés lograr?</label>
+          <div class="input">12 meses</div>
+          <div class="chiprow" id="plazorow">
+            <div class="chip" data-chip>6 m</div><div class="chip sel" data-chip>12 m</div><div class="chip" data-chip>24 m</div><div class="chip" data-chip>Otro</div>
+          </div>
+        </div>
+      </div>
+      <div class="footer-btn"><div class="btn" onclick="goto_(2)">Continuar</div></div>
+    </div>
+
+    <!-- S3: punto de partida -->
+    <div class="scr" data-id="s3">
+      <div class="statusbar"><span>9:41</span><span>●●●● ▲ 🔋</span></div>
+      <div class="progress-dots"><span class="done"></span><span class="done"></span><span class="done"></span><span></span></div>
+      <div class="topbar"><span class="back" onclick="goto_(1)">‹</span><h3>Nueva meta</h3></div>
+      <div class="content">
+        <div class="q">¿Cómo estás arrancando?</div>
+        <div class="field"><label>¿Cuánto tenés ahorrado hoy?</label><div class="input">$ 0</div></div>
+        <div class="field">
+          <label>¿Cuánto podés separar?</label>
+          <div class="chiprow" id="freqrow">
+            <div class="chip" data-chip>Por día</div><div class="chip sel" data-chip>Por semana</div><div class="chip" data-chip>Por mes</div>
+          </div>
+          <div class="input" style="margin-top:8px;">$ 46.000 / semana</div>
+        </div>
+      </div>
+      <div class="footer-btn"><div class="btn" onclick="goto_(3)">Calcular mi plan</div></div>
+    </div>
+
+    <!-- S4: resultado -->
+    <div class="scr" data-id="s4">
+      <div class="statusbar"><span>9:41</span><span>●●●● ▲ 🔋</span></div>
+      <div class="progress-dots"><span class="done"></span><span class="done"></span><span class="done"></span><span class="done"></span></div>
+      <div class="content" style="padding-top:8px;">
+        <div class="result-hero">
+          <div class="check">✓</div>
+          <h4>¡Tu plan está listo!</h4>
+          <p>Mi primer auto 🚗 · $10.000.000</p>
+        </div>
+        <div class="card"><div class="label">Tenés que ahorrar</div><div class="big purple">$250.000 / mes</div></div>
+        <div class="stat-row">
+          <div class="stat"><div class="n">15 Dic 2027</div><div class="l">Fecha objetivo</div></div>
+          <div class="stat"><div class="n">16 meses</div><div class="l">Duración</div></div>
+        </div>
+        <div class="sub" style="margin-top:0;">Si ahorrás $2.000 más por día, llegás 3 meses antes.</div>
+      </div>
+      <div class="footer-btn"><div class="btn" onclick="goto_(4)">Empezar mi meta 🚀</div></div>
+    </div>
+
+    <!-- S4b: subir fotos propias -->
+    <div class="scr" data-id="s4b">
+      <div class="statusbar"><span>9:41</span><span>●●●● ▲ 🔋</span></div>
+      <div class="topbar"><span class="back" onclick="goto_(3)">‹</span><h3>Personalizá tu experiencia</h3></div>
+      <div class="content">
+        <div class="q">Subí fotos de tu auto real 🚗</div>
+        <div class="sub" style="margin-top:-10px;">Así vas a poder ver tu propio auto en vez de uno genérico. Es opcional.</div>
+        <div class="grid2">
+          <div class="opt" style="padding:26px 10px;">📷<br>Exterior</div>
+          <div class="opt" style="padding:26px 10px;">📷<br>Interior</div>
+        </div>
+        <div class="disclaimer" style="margin-top:16px;"><b>Importante:</b> las experiencias generadas a partir de tus fotos son una recreación con IA, no una foto o video real. Si preferís no subir nada, usamos imágenes de referencia.</div>
+      </div>
+      <div class="footer-btn" style="display:flex;flex-direction:column;gap:10px;">
+        <div class="btn" onclick="goto_(5)">Continuar</div>
+        <div class="btn secondary" onclick="goto_(5)">Usar imágenes genéricas</div>
+      </div>
+    </div>
+
+    <!-- S5: elegir escenario -->
+    <div class="scr" data-id="s5">
+      <div class="statusbar"><span>9:41</span><span>●●●● ▲ 🔋</span></div>
+      <div class="topbar"><span class="back" onclick="goto_(4)">‹</span><h3>Simulá tu ahorro</h3></div>
+      <div class="content">
+        <div class="sub" style="margin:0 0 14px;">Elegí una alternativa para ver una proyección hipotética de tu meta.</div>
+        <div class="sim-item" data-sim><div><div class="name">Cuenta remunerada</div><div class="desc">Liquidez inmediata</div></div><div class="rate">~30%</div><div class="radio"></div></div>
+        <div class="sim-item sel" data-sim><div><div class="name">Fondos comunes</div><div class="desc">Diversificado, moderado</div></div><div class="rate">~52%</div><div class="radio"></div></div>
+        <div class="sim-item" data-sim><div><div class="name">Plazo fijo UVA</div><div class="desc">Ajusta por inflación</div></div><div class="rate">~40%</div><div class="radio"></div></div>
+        <div class="sim-item" data-sim><div><div class="name">CEDEARs</div><div class="desc">Mayor volatilidad</div></div><div class="rate">~65%</div><div class="radio"></div></div>
+        <div class="disclaimer"><b>Esto es una simulación.</b> Los rendimientos son estimados, variables y no están garantizados. No es una recomendación de inversión.</div>
+      </div>
+      <div class="footer-btn"><div class="btn" onclick="goto_(6)">Ver proyección</div></div>
+    </div>
+
+    <!-- S6: proyección -->
+    <div class="scr" data-id="s6">
+      <div class="statusbar"><span>9:41</span><span>●●●● ▲ 🔋</span></div>
+      <div class="topbar"><span class="back" onclick="goto_(5)">‹</span><h3>Fondos comunes</h3></div>
+      <div class="content">
+        <div class="card" style="margin-bottom:10px;"><div class="label">Rendimiento anual estimado</div><div class="big" style="color:var(--green);">~52%</div></div>
+        <div class="chart"><svg viewBox="0 0 240 100" preserveAspectRatio="none">
+          <polyline points="6,88 60,78 120,55 180,30 234,10" fill="none" stroke="#a855f7" stroke-width="3"/>
+          <circle cx="234" cy="10" r="4" fill="#c9b3ff"/>
+        </svg></div>
+        <div class="stat-row">
+          <div class="stat"><div class="n">$2.150.000</div><div class="l">Proyección a 2 años</div></div>
+          <div class="stat"><div class="n">-5 meses</div><div class="l">vs. plan actual</div></div>
+        </div>
+        <div class="disclaimer"><b>Estimación educativa.</b> No es asesoramiento financiero ni una promesa de resultado.</div>
+      </div>
+      <div class="footer-btn"><div class="btn" onclick="goto_(7)">Ver efecto de la inflación</div></div>
+    </div>
+
+    <!-- S7: inflación -->
+    <div class="scr" data-id="s7">
+      <div class="statusbar"><span>9:41</span><span>●●●● ▲ 🔋</span></div>
+      <div class="topbar"><span class="back" onclick="goto_(6)">‹</span><h3>Tu meta en el tiempo</h3></div>
+      <div class="content">
+        <div class="sub" style="margin:0 0 8px;">Un viaje a Japón no necesariamente cuesta lo mismo dentro de 16 meses.</div>
+        <div class="card">
+          <div class="infl-row"><div class="t">Costo hoy</div><div class="v">$10.000.000</div></div>
+          <div class="infl-row"><div class="t">Costo estimado en 16 meses</div><div class="v up">$11.450.000</div></div>
+          <div class="infl-row"><div class="t">Ajuste sugerido al plan</div><div class="v up">+$90.625 / mes</div></div>
+        </div>
+        <div class="disclaimer"><b>Importante:</b> es una proyección orientativa, no un cálculo garantizado.</div>
+      </div>
+      <div class="footer-btn"><div class="btn" onclick="goto_(8)">Ver servicios relacionados</div></div>
+    </div>
+
+    <!-- S8: servicios / fin -->
+    <div class="scr" data-id="s8">
+      <div class="statusbar"><span>9:41</span><span>●●●● ▲ 🔋</span></div>
+      <div class="topbar"><span class="back" onclick="goto_(7)">‹</span><h3>Servicios relacionados</h3></div>
+      <div class="content">
+        <div style="display:inline-block;background:#332a1a;color:var(--amber);font-size:10px;font-weight:700;letter-spacing:.05em;padding:3px 9px;border-radius:20px;margin-bottom:12px;">PUBLICIDAD</div>
+        <div class="sub" style="margin:0 0 12px;">Separado de tu simulación: estas son opciones de terceros, no una sugerencia de Alcanzando Sueños.</div>
+        <div class="card"><div class="label">Billetera virtual</div><div style="font-size:13px;font-weight:700;margin-top:2px;">Abrí una cuenta remunerada</div></div>
+        <div class="card"><div class="label">Broker</div><div style="font-size:13px;font-weight:700;margin-top:2px;">Invertí en fondos comunes</div></div>
+        <div class="sub">Podés desactivar estas sugerencias desde tu perfil en cualquier momento.</div>
+      </div>
+      <div class="footer-btn"><div class="btn" onclick="goto_(9)">Volver a mi meta</div></div>
+    </div>
+
+    <!-- S9: fin de la demo -->
+    <div class="scr" data-id="s9">
+      <div class="end-hero">
+        <div class="big-check">🏔️</div>
+        <h4 style="font-size:18px;margin:0 0 8px;">Fin de la demo</h4>
+        <p style="color:var(--muted);font-size:13px;line-height:1.5;">Esto fue un recorrido de ejemplo por Alcanzando Sueños.<br>En la app real, cada meta guarda tu progreso real.</p>
+        <div class="restart" onclick="goto_(0)">⟲ Volver a empezar la demo</div>
+      </div>
+    </div>
+
+  </div></div>
+
+  <div class="interviewer-note">
+    <b>Instrucciones para vos (entrevistador):</b> dejá que la persona toque los botones y elija las categorías/opciones por su cuenta — no expliques de antemano qué hace la app. Usá esto en el Bloque 3 y 4 de la guía de validación (reacción al concepto y al simulador). Las selecciones son solo visuales, no hace falta que el flujo "funcione" del todo para la charla.
+  </div>
+
+<script>
+  const order = ['s1','s2','s3','s4','s4b','s5','s6','s7','s8','s9'];
+  const dotsEl = document.getElementById('dots');
+  order.forEach((_, i) => {
+    if (i === order.length - 1) return; // no dot for the closing screen
+    const d = document.createElement('span');
+    dotsEl.appendChild(d);
+  });
+
+  function goto_(i) {
+    document.querySelectorAll('.scr').forEach(s => s.classList.remove('active'));
+    document.querySelector('.scr[data-id="' + order[i] + '"]').classList.add('active');
+    const dots = dotsEl.querySelectorAll('span');
+    dots.forEach((d, j) => d.classList.toggle('active', j === i));
+  }
+  goto_(0);
+
+  document.querySelectorAll('#catgrid .opt').forEach(el => {
+    el.addEventListener('click', () => {
+      document.querySelectorAll('#catgrid .opt').forEach(o => o.classList.remove('sel'));
+      el.classList.add('sel');
+    });
+  });
+  document.querySelectorAll('#plazorow .chip').forEach(el => {
+    el.addEventListener('click', () => {
+      document.querySelectorAll('#plazorow .chip').forEach(o => o.classList.remove('sel'));
+      el.classList.add('sel');
+    });
+  });
+  document.querySelectorAll('#freqrow .chip').forEach(el => {
+    el.addEventListener('click', () => {
+      document.querySelectorAll('#freqrow .chip').forEach(o => o.classList.remove('sel'));
+      el.classList.add('sel');
+    });
+  });
+  document.querySelectorAll('[data-sim]').forEach(el => {
+    el.addEventListener('click', () => {
+      document.querySelectorAll('[data-sim]').forEach(o => o.classList.remove('sel'));
+      el.classList.add('sel');
+    });
+  });
+</script>
+
+</body>
+</html>
