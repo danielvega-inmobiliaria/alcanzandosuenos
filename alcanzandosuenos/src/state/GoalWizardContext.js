@@ -1,10 +1,13 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { api } from '../api/client';
+import { useAuth } from './AuthContext';
 
 // Estado compartido del flujo "Crear una meta" (Backlog, Sprint 1).
 // Cada pantalla lee/escribe acá en vez de pasar props manualmente entre pasos.
-// A partir de Sprint 2 este contexto también habla con el backend real
-// (crear usuario/meta, sin autenticación todavía — ver README).
+// Desde Sesión 4 el usuario ya no es un demo local: `usuarioId` es el id real
+// de la sesión de Supabase Auth (ver AuthContext) — este provider solo vive
+// dentro del árbol autenticado (ver RootNavigator), así que siempre hay un
+// usuarioId cuando se monta.
 
 const GoalWizardCtx = createContext(null);
 
@@ -19,12 +22,8 @@ export const CATEGORIES = [
 
 const PLAZOS = [6, 12, 24];
 
-// Sin autenticación todavía (queda para el módulo de Auth de la Arquitectura
-// Técnica). Mientras tanto, la app opera como un único usuario demo local,
-// creado (o recuperado, por email) contra el backend real al arrancar.
-const USUARIO_DEMO = { nombre: 'Daniel', email: 'demo@alcanzandosuenos.local' };
-
 export function GoalWizardProvider({ children }) {
+  const { usuarioId } = useAuth();
   const [category, setCategory] = useState('auto');
   const [monto, setMonto] = useState('10000000');
   const [plazoMeses, setPlazoMeses] = useState(12);
@@ -32,17 +31,21 @@ export function GoalWizardProvider({ children }) {
   const [frecuencia, setFrecuencia] = useState('semana'); // dia | semana | mes
   const [aporte, setAporte] = useState('46000');
 
-  const [usuarioId, setUsuarioId] = useState(null);
+  const [usuarioListo, setUsuarioListo] = useState(false);
   const [usuarioError, setUsuarioError] = useState(null);
   const [creando, setCreando] = useState(false);
   const [metaCreadaId, setMetaCreadaId] = useState(null);
 
+  // Se asegura de que exista la fila en `usuario` (upsert por id de Supabase)
+  // antes de dejar usar el resto de la app — ver POST /usuarios/sync.
   useEffect(() => {
+    setUsuarioListo(false);
+    setUsuarioError(null);
     api
-      .crearUsuario(USUARIO_DEMO)
-      .then((u) => setUsuarioId(u.id))
+      .sincronizarUsuario()
+      .then(() => setUsuarioListo(true))
       .catch((e) => setUsuarioError(e.message));
-  }, []);
+  }, [usuarioId]);
 
   // Cálculo automático del plan (backlog Sprint 1: "la app calcula
   // automáticamente el aporte periódico necesario y una fecha objetivo realista")
@@ -59,12 +62,11 @@ export function GoalWizardProvider({ children }) {
   // Backlog Sprint 1, Historia 4: "Botón 'Empezar mi meta' crea el registro
   // y lleva al tablero" — acá crea la meta de verdad contra el backend.
   async function crearMetaEnBackend() {
-    if (!usuarioId) throw new Error('Todavía no se pudo conectar con el servidor. Probá de nuevo.');
+    if (!usuarioListo) throw new Error('Todavía no se pudo conectar con el servidor. Probá de nuevo.');
     setCreando(true);
     try {
       const catInfo = CATEGORIES.find((c) => c.key === category);
       const meta = await api.crearMeta({
-        usuario_id: usuarioId,
         categoria: category,
         titulo: catInfo ? catInfo.label : 'Mi meta',
         monto_objetivo: plan.montoNum,
@@ -99,7 +101,7 @@ export function GoalWizardProvider({ children }) {
     frecuencia, setFrecuencia,
     aporte, setAporte,
     plan,
-    usuarioId, usuarioError,
+    usuarioId, usuarioListo, usuarioError,
     creando, metaCreadaId,
     crearMetaEnBackend,
     resetWizard,

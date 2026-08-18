@@ -19,13 +19,15 @@ export class MetasService {
     private readonly logrosService: LogrosService,
   ) {}
 
-  async crear(dto: CrearMetaDto) {
+  // usuarioId viene siempre del token verificado (SupabaseAuthGuard), nunca
+  // del body — así nadie puede crear una meta a nombre de otro usuario.
+  async crear(dto: CrearMetaDto, usuarioId: string) {
     const { rows } = await this.pool.query(
       `insert into meta (usuario_id, categoria, titulo, monto_objetivo, monto_actual, fecha_objetivo, aporte_periodico)
        values ($1, $2, $3, $4, $5, $6, $7)
        returning *`,
       [
-        dto.usuario_id,
+        usuarioId,
         dto.categoria,
         dto.titulo,
         dto.monto_objetivo,
@@ -71,10 +73,8 @@ export class MetasService {
     return { resumen, metas: rows };
   }
 
-  async buscarPorId(id: string) {
-    const { rows } = await this.pool.query(`select * from meta where id = $1`, [id]);
-    if (!rows[0]) throw new NotFoundException('Meta no encontrada');
-    const meta = rows[0];
+  async buscarPorId(id: string, usuarioId: string) {
+    const meta = await this.buscarExisteYDeUsuario(id, usuarioId);
     const pasos = await this.pasosService.listarPorMeta(id);
     const { rows: aportes } = await this.pool.query(
       `select id, monto, fecha, origen from aporte where meta_id = $1 order by fecha desc`,
@@ -87,8 +87,8 @@ export class MetasService {
     return { ...meta, progreso, pasos, aportes };
   }
 
-  async actualizar(id: string, dto: ActualizarMetaDto) {
-    await this.buscarExisteOFalla(id);
+  async actualizar(id: string, dto: ActualizarMetaDto, usuarioId: string) {
+    await this.buscarExisteYDeUsuario(id, usuarioId);
     const { rows } = await this.pool.query(
       `update meta set
          titulo = coalesce($2, titulo),
@@ -103,8 +103,8 @@ export class MetasService {
   // Registrar aporte (Backlog Sprint 3, se adelanta acá para que el detalle de
   // meta sea funcional de punta a punta): impacta monto_actual de inmediato y
   // completa la meta automáticamente si se alcanza el objetivo.
-  async registrarAporte(metaId: string, dto: CrearAporteDto) {
-    const meta = await this.buscarExisteOFalla(metaId);
+  async registrarAporte(metaId: string, dto: CrearAporteDto, usuarioId: string) {
+    const meta = await this.buscarExisteYDeUsuario(metaId, usuarioId);
     const client = await this.pool.connect();
     try {
       await client.query('begin');
@@ -140,9 +140,11 @@ export class MetasService {
     }
   }
 
-  private async buscarExisteOFalla(id: string) {
+  // Devuelve 404 tanto si la meta no existe como si es de otro usuario — no
+  // hay que darle a un atacante la pista de "existe pero no es tuya".
+  private async buscarExisteYDeUsuario(id: string, usuarioId: string) {
     const { rows } = await this.pool.query(`select * from meta where id = $1`, [id]);
-    if (!rows[0]) throw new NotFoundException('Meta no encontrada');
+    if (!rows[0] || rows[0].usuario_id !== usuarioId) throw new NotFoundException('Meta no encontrada');
     return rows[0];
   }
 }

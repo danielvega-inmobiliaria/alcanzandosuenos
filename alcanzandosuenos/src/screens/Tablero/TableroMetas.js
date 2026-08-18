@@ -6,6 +6,7 @@ import Card from '../../components/Card';
 import Button from '../../components/Button';
 import ProgressBar from '../../components/ProgressBar';
 import { useGoalWizard, CATEGORIES } from '../../state/GoalWizardContext';
+import { useAuth } from '../../state/AuthContext';
 import { api } from '../../api/client';
 import { formatMoney } from '../../utils/format';
 import { colors, spacing } from '../../theme/tokens';
@@ -25,21 +26,22 @@ function emojiDe(categoria) {
 // "Como usuario quiero ver todas mis metas en un tablero para tener una
 // vista general de mi progreso" — resumen general + filtros por estado.
 export default function TableroMetas({ navigation }) {
-  const { usuarioId, usuarioError, resetWizard } = useGoalWizard();
+  const { usuarioListo, usuarioError, resetWizard } = useGoalWizard();
+  const { email, cerrarSesion } = useAuth();
   const [filtro, setFiltro] = useState('todas');
   const [data, setData] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
 
   const cargar = useCallback(() => {
-    if (!usuarioId) return;
+    if (!usuarioListo) return;
     setCargando(true);
     api
-      .listarMetas(usuarioId, filtro)
+      .listarMetas(filtro)
       .then((res) => setData(res))
       .catch((e) => setError(e.message))
       .finally(() => setCargando(false));
-  }, [usuarioId, filtro]);
+  }, [usuarioListo, filtro]);
 
   useFocusEffect(
     useCallback(() => {
@@ -63,6 +65,13 @@ export default function TableroMetas({ navigation }) {
         />
       }
     >
+      <View style={styles.cuentaRow}>
+        <Text style={styles.cuentaEmail} numberOfLines={1}>{email}</Text>
+        <Pressable onPress={cerrarSesion} hitSlop={8}>
+          <Text style={styles.cuentaSalir}>Cerrar sesión</Text>
+        </Pressable>
+      </View>
+
       {usuarioError ? (
         <Text style={styles.error}>No se pudo conectar con el servidor: {usuarioError}</Text>
       ) : null}
@@ -137,6 +146,12 @@ export default function TableroMetas({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+  cuentaRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    marginBottom: spacing.md,
+  },
+  cuentaEmail: { color: colors.muted, fontSize: 11.5, flex: 1, marginRight: spacing.sm },
+  cuentaSalir: { color: colors.purple2, fontSize: 11.5, fontWeight: '700' },
   error: { color: '#fca5a5', fontSize: 12, marginBottom: 10 },
   resumenTop: { flexDirection: 'row', alignItems: 'baseline', gap: 8, marginBottom: 8 },
   resumenBig: { color: '#c9b3ff', fontSize: 24, fontWeight: '800' },

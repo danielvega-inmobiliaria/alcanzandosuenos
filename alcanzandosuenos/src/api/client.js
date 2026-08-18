@@ -1,3 +1,5 @@
+import { supabase } from './supabase';
+
 // Cliente de la API real (Arquitectura Técnica, sección 2: Node/NestJS + Postgres).
 // En Expo web, `localhost` apunta al mismo host donde corre el backend durante
 // desarrollo. Para un dispositivo físico hay que apuntar EXPO_PUBLIC_API_URL a
@@ -5,8 +7,19 @@
 export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
 
 async function request(path, options = {}) {
+  // Cada request autenticado manda el JWT de la sesión de Supabase — el
+  // backend lo valida en SupabaseAuthGuard (ver Sesión 4 de PROYECTO.md).
+  // Sin sesión no debería llamarse a esto (RootNavigator no muestra las
+  // pantallas que usan `api` hasta que hay sesión), pero por las dudas no
+  // rompe si no hay token: el backend responde 401 y listo.
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+
   const res = await fetch(`${API_BASE_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     ...options,
   });
   const isJson = res.headers.get('content-type')?.includes('application/json');
@@ -19,14 +32,16 @@ async function request(path, options = {}) {
 }
 
 export const api = {
-  crearUsuario: (dto) => request('/usuarios', { method: 'POST', body: JSON.stringify(dto) }),
+  // Se llama una vez al loguearse (ver AuthContext + RootNavigator) para
+  // asegurar que exista la fila en `usuario` — el id/email salen del token,
+  // no de acá.
+  sincronizarUsuario: () => request('/usuarios/sync', { method: 'POST' }),
   crearMeta: (dto) => request('/metas', { method: 'POST', body: JSON.stringify(dto) }),
-  listarMetas: (usuarioId, estado) =>
-    request(`/metas?usuario_id=${usuarioId}${estado && estado !== 'todas' ? `&estado=${estado}` : ''}`),
+  listarMetas: (estado) => request(`/metas${estado && estado !== 'todas' ? `?estado=${estado}` : ''}`),
   buscarMeta: (id) => request(`/metas/${id}`),
   actualizarMeta: (id, dto) => request(`/metas/${id}`, { method: 'PATCH', body: JSON.stringify(dto) }),
   registrarAporte: (metaId, dto) =>
     request(`/metas/${metaId}/aportes`, { method: 'POST', body: JSON.stringify(dto) }),
   alternarPaso: (id) => request(`/pasos/${id}/alternar`, { method: 'PATCH' }),
-  listarLogros: (usuarioId) => request(`/usuarios/${usuarioId}/logros`),
+  listarLogros: () => request('/logros'),
 };

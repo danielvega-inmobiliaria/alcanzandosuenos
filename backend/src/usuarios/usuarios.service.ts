@@ -1,18 +1,21 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { Pool } from 'pg';
 import { PG_POOL } from '../db/db.module';
-import { CrearUsuarioDto } from './dto/crear-usuario.dto';
 
 @Injectable()
 export class UsuariosService {
   constructor(@Inject(PG_POOL) private readonly pool: Pool) {}
 
-  async crear(dto: CrearUsuarioDto) {
+  // Se llama con el id/email ya verificados por SupabaseAuthGuard (nunca con
+  // datos que mande el cliente sin validar). El id de `usuario` es el mismo
+  // uuid que Supabase Auth le asignó al usuario — así no hace falta una
+  // columna de mapeo aparte entre "usuario de auth" y "usuario de la app".
+  async asegurarUsuario(id: string, email: string, nombre?: string) {
     const { rows } = await this.pool.query(
-      `insert into usuario (nombre, email) values ($1, $2)
-       on conflict (email) do update set nombre = excluded.nombre
+      `insert into usuario (id, nombre, email) values ($1, $2, $3)
+       on conflict (id) do update set email = excluded.email
        returning id, nombre, email, fecha_alta`,
-      [dto.nombre, dto.email],
+      [id, nombre || email.split('@')[0], email],
     );
     return rows[0];
   }

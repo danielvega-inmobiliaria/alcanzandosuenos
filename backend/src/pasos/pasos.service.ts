@@ -29,8 +29,14 @@ export class PasosService {
     return rows;
   }
 
-  async alternar(id: string) {
-    const { rows: actual } = await this.pool.query(`select estado from paso where id = $1`, [id]);
+  // El paso no sabe de quién es directamente — hay que subir a través de la
+  // meta para confirmar que es del usuario autenticado antes de tocarlo.
+  async alternar(id: string, usuarioId: string) {
+    const { rows: actual } = await this.pool.query(
+      `select p.estado from paso p join meta m on m.id = p.meta_id
+       where p.id = $1 and m.usuario_id = $2`,
+      [id, usuarioId],
+    );
     if (!actual[0]) throw new NotFoundException('Paso no encontrado');
     const nuevoEstado = actual[0].estado === 'completado' ? 'pendiente' : 'completado';
     const nuevaFecha = nuevoEstado === 'completado' ? new Date() : null;

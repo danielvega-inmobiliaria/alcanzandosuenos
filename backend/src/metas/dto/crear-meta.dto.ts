@@ -1,11 +1,11 @@
-import { IsIn, IsISO8601, IsNumber, IsOptional, IsPositive, IsString, IsUUID, MinLength } from 'class-validator';
+import { IsIn, IsISO8601, IsNumber, IsOptional, IsPositive, IsString, MinLength } from 'class-validator';
 
 const CATEGORIAS = ['auto', 'casa', 'viaje', 'estudios', 'computadora', 'personal', 'personalizada'];
 
+// `usuario_id` ya no viene del cliente (antes era el bloqueante de seguridad
+// más obvio: cualquiera podía crear metas a nombre de otro usuario_id).
+// El controller lo agrega server-side desde el token verificado.
 export class CrearMetaDto {
-  @IsUUID()
-  usuario_id: string;
-
   @IsIn(CATEGORIAS)
   categoria: string;
 

@@ -2,7 +2,15 @@ import React from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';
 import { colors, radii, spacing } from '../theme/tokens';
 
-export default function InputField({ label, value, onChangeText, keyboardType = 'default', placeholder }) {
+export default function InputField({
+  label,
+  value,
+  onChangeText,
+  keyboardType = 'default',
+  placeholder,
+  secureTextEntry = false,
+  autoCapitalize = 'sentences',
+}) {
   return (
     <View style={styles.field}>
       {label ? <Text style={styles.label}>{label}</Text> : null}
@@ -13,6 +21,9 @@ export default function InputField({ label, value, onChangeText, keyboardType = 
         keyboardType={keyboardType}
         placeholder={placeholder}
         placeholderTextColor={colors.muted}
+        secureTextEntry={secureTextEntry}
+        autoCapitalize={autoCapitalize}
+        autoCorrect={false}
       />
     </View>
   );
