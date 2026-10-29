@@ -16,20 +16,24 @@ export default function AuthScreen() {
   const [password, setPassword] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [mensaje, setMensaje] = useState(null);
+  const [mensajeExito, setMensajeExito] = useState(false);
 
   async function enviar() {
     if (!email || !password) {
+      setMensajeExito(false);
       setMensaje('Completá email y contraseña.');
       return;
     }
     setEnviando(true);
     setMensaje(null);
+    setMensajeExito(false);
     try {
       if (modo === 'login') {
         await iniciarSesion(email, password);
       } else {
         await crearCuenta(email, password);
-        setMensaje('Cuenta creada. Si tu proyecto de Supabase pide confirmar el email, revisá tu correo antes de poder entrar.');
+        setMensajeExito(true);
+        setMensaje('Cuenta creada. Revisá tu email (y la carpeta de spam) y confirmá la cuenta desde el link que te mandamos antes de entrar.');
       }
     } catch (e) {
       // authError ya queda seteado en el contexto; acá solo evitamos que
@@ -64,7 +68,11 @@ export default function AuthScreen() {
           placeholder="••••••••"
         />
 
-        {(mensaje || authError) ? <Text style={styles.error}>{mensaje || authError}</Text> : null}
+        {(mensaje || authError) ? (
+          <Text style={mensajeExito && !authError ? styles.exito : styles.error}>
+            {authError || mensaje}
+          </Text>
+        ) : null}
 
         {enviando ? (
           <ActivityIndicator color={colors.purple2} style={{ marginTop: spacing.md }} />
@@ -91,5 +99,6 @@ const styles = StyleSheet.create({
   content: { flex: 1, justifyContent: 'center', paddingHorizontal: spacing.lg },
   titulo: { color: colors.text, fontSize: 24, fontWeight: '800', marginBottom: spacing.xs },
   error: { color: '#fca5a5', fontSize: 12.5, marginTop: spacing.xs, marginBottom: spacing.xs },
+  exito: { color: '#86efac', fontSize: 12.5, marginTop: spacing.xs, marginBottom: spacing.xs },
   link: { color: colors.purple2, fontSize: 13, fontWeight: '700', textAlign: 'center' },
 });
