@@ -6,7 +6,7 @@
 
 ---
 
-_Última actualización: 18/08/2026 (Sesión 5 — Setup de Supabase + verificación local)_
+_Última actualización: 29/10/2026 (commit de la auth con Supabase, `e305e55`; última sesión de trabajo: Sesión 5 del 18/08 — Setup de Supabase + verificación local)_
 
 ## Qué es este proyecto
 App de ahorro para metas (originalmente pensada como "MisMetas"), pensada para que el usuario visualice lo que quiere lograr (auto, casa, viaje, estudios, etc.), planifique cómo llegar y se mantenga motivado en el camino. Combina: definición de metas con cálculo automático del aporte periódico, un simulador financiero educativo (separado claramente de asesoramiento financiero real, por regulación CNV), experiencias visuales que progresan con el ahorro (banco de imágenes curado, y a futuro fotos propias del usuario + IA), gamificación (logros/hitos), y varios modelos de monetización: publicidad contextual, leads de servicios financieros relacionados, colaboración voluntaria vía Mercado Pago, y una futura versión premium anclada en la cuota de generaciones con IA.
